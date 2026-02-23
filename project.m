@@ -61,8 +61,6 @@ for i = 1:8:512
         best_lab = C(closest_idx, :);
         best_rgb = lab2rgb(best_lab);
 
-
-        
         im2(i:i+7, j:j+7, 1) = circle .* best_rgb(1);
         im2(i:i+7, j:j+7, 2) = circle .* best_rgb(2);
         im2(i:i+7, j:j+7, 3) = circle .* best_rgb(3);
