@@ -31,8 +31,6 @@ g = [0 0 0 0 1 0 0 0 0;
      0 0 0 0 1 0 0 0 0;];
 
 
-
-
 [rows, cols, channels] = size(im);
 pixel_data = rgb2lab(reshape(im, rows * cols, channels));
 num_colors = 100;
@@ -63,9 +61,11 @@ for i = 1:8:512
         best_lab = C(closest_idx, :);
         best_rgb = lab2rgb(best_lab);
 
+
+        
         im2(i:i+7, j:j+7, 1) = circle .* best_rgb(1);
-        im2(i:i+7, j:j+7, 2) = circle .* best_rgb(2);
-        im2(i:i+7, j:j+7, 3) = circle .* best_rgb(3);
+        im2(i:i+7, j:j+7, 2) = best_rgb(2);
+        im2(i:i+7, j:j+7, 3) = best_rgb(3);
 %         im2(i:i+7, j:j+7, 1) = optimal_r;
 %         im2(i:i+7, j:j+7, 2) = optimal_g;
 %         im2(i:i+7, j:j+7, 3) = optimal_b;
