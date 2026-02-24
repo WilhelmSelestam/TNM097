@@ -1,7 +1,40 @@
-%% Project
+%%% Project
 clc
 clear
+% Generate color palette
+% 1. 16 Standard ANSI colors
+ansi = [0,0,0; 128,0,0; 0,128,0; 128,128,0; 0,0,128; 128,0,128; 0,128,128; 192,192,192;
+        128,128,128; 255,0,0; 0,255,0; 255,255,0; 0,0,255; 255,0,255; 0,255,255; 255,255,255] / 255;
 
+% 2. 216 colors (the 6x6x6 color cube)
+vals = [0, 95, 135, 175, 215, 255] / 255;
+[R, G, B] = ndgrid(vals, vals, vals);
+cube = [R(:), G(:), B(:)];
+
+% 3. 24 Grayscale levels (gradient from dark to light)
+grays_val = linspace(8, 238, 24)' / 255;
+grays = [grays_val, grays_val, grays_val];
+
+% Combine into the final 256x3 dataset
+my_palette = [ansi; cube; grays];
+my_palette = my_palette(1:256, :); % Final array
+
+%% Visualize the colors 
+% 1. Reshape the 256x3 palette into a 16x16 grid
+% Since each color is an RGB triplet, the final size is 16x16x3
+palette_grid = reshape(my_palette, [16, 16, 3]);
+
+% 2. Display the grid
+figure;
+imshow(palette_grid, 'InitialMagnification', 'fit');
+axis on;
+title('256 Color Dataset (16x16 Grid)');
+
+% Optional: Label the axes to help identify specific color indices
+xlabel('Column');
+ylabel('Row');
+
+%%
 im = im2double(imread("peppers_color.tif"));
 im2 = im;
 
