@@ -1,5 +1,4 @@
-
-
+%% Project
 clc
 clear
 
@@ -103,20 +102,20 @@ imshow(im2);
 
 %%
 
-% subplot(1,2,1)
-% imshow(im)
-% 
-% subplot(1,2,2)
-% imshow(im2)
+ subplot(1,2,1)
+ imshow(im)
+ 
+ subplot(1,2,2)
+ imshow(im2)
 
-% quantized_pixel_data = C(idx, :);
-% quantized_img = reshape(quantized_pixel_data, rows, cols, channels);
+ quantized_pixel_data = C(idx, :);
+ quantized_img = reshape(quantized_pixel_data, rows, cols, channels);
 
-% subplot(1, 2, 1);
-% imshow(im); 
-% 
-% subplot(1, 2, 2);
-% imshow(quantized_img);
+ subplot(1, 2, 1);
+ imshow(im); 
+ 
+ subplot(1, 2, 2);
+ imshow(quantized_img);
 
 %%
 clc
