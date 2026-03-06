@@ -46,9 +46,6 @@ img_work = img_org;
 %num_colors = 100;
 %[idx, C] = kmeans(pixel_data, num_colors, 'MaxIter', 200);
 
-
-
-
 % Convert original image to CIELAB
 img_lab = rgb2lab(img_org);
 
@@ -92,14 +89,33 @@ swatch_img = reshape(swatch_blocks, actual_num_colors * 20, 20, 3);
 imshow(swatch_img); 
 title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
 
+%% create new image
 
-% test 
+circle = [0 0 0 1 1 0 0 0;
+          0 0 1 1 1 1 0 0;
+          0 1 1 1 1 1 1 0;
+          1 1 1 1 1 1 1 1;
+          1 1 1 1 1 1 1 1;
+          0 1 1 1 1 1 1 0;
+          0 0 1 1 1 1 0 0;
+          0 0 0 1 1 0 0 0;];
+
+circle = [0 0 0 1 1 0 0 0;
+          0 0 1 1 1 1 0 0;
+          0 1 1 1 1 1 1 0;
+          1 1 1 1 1 1 1 1;
+          1 1 1 1 1 1 1 1;
+          0 1 1 1 1 1 1 0;
+          0 0 1 1 1 1 0 0;
+          0 0 0 1 1 0 0 0;];
+
+%% test 
 
 for i = 1:8:512
     for j = 1:8:512
-        optimal_r = sum(sum(im(i:i+7, j:j+7, 1)))/40;
-        optimal_g = sum(sum(im(i:i+7, j:j+7, 2)))/40;
-        optimal_b = sum(sum(im(i:i+7, j:j+7, 3)))/40;
+        optimal_r = sum(sum(im_org(i:i+7, j:j+7, 1)))/40;
+        optimal_g = sum(sum(im_org(i:i+7, j:j+7, 2)))/40;
+        optimal_b = sum(sum(im_org(i:i+7, j:j+7, 3)))/40;
 
         current_block_rgb = zeros(1,1,3);
         current_block_rgb(:,:,1) = optimal_r;
@@ -129,20 +145,6 @@ end
 
 
 
-
-
-
-
-
-
-circle = [0 0 0 1 1 0 0 0;
-          0 0 1 1 1 1 0 0;
-          0 1 1 1 1 1 1 0;
-          1 1 1 1 1 1 1 1;
-          1 1 1 1 1 1 1 1;
-          0 1 1 1 1 1 1 0;
-          0 0 1 1 1 1 0 0;
-          0 0 0 1 1 0 0 0;];
 
 circle_rgb = zeros(8,8,3);
 circle_rgb(:,:,1) = circle;
