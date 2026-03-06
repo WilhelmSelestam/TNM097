@@ -57,7 +57,7 @@ g = [0 0 0 0 1 0 0 0 0;
      0 0 1 1 1 1 1 0 0;
      0 1 1 1 1 1 1 1 0;
      0 1 1 1 1 1 1 1 0;
-
+     0 1 1 1 1 1 1 1 0;
      0 0 1 1 1 1 1 0 0;
      0 0 0 1 1 1 0 0 0;
      0 0 0 0 1 0 0 0 0;];
@@ -124,72 +124,11 @@ end
 % 
 
 
-subplot(1, 2, 1);
-imshow(im);
-
-subplot(1, 2, 2);
+% subplot(1, 2, 1);
+% imshow(im);
+% 
+% subplot(1, 2, 2);
 imshow(im2);
-
-
-
-
-%%
-
- subplot(1,2,1)
- imshow(im)
- 
- subplot(1,2,2)
- imshow(im2)
-
- quantized_pixel_data = C(idx, :);
- quantized_img = reshape(quantized_pixel_data, rows, cols, channels);
-
- subplot(1, 2, 1);
- imshow(im); 
- 
- subplot(1, 2, 2);
- imshow(quantized_img);
-
-%%
-clc
-clear
-
-circle = [0 0 0 1 1 0 0 0;
-          0 0 1 1 1 1 0 0;
-          0 1 1 1 1 1 1 0;
-          1 1 1 1 1 1 1 1;
-          1 1 1 1 1 1 1 1;
-          0 1 1 1 1 1 1 0;
-          0 0 1 1 1 1 0 0;
-          0 0 0 1 1 0 0 0;];
-
-im = im2double(imread("peppers_color.tif"));
-
-im(1:8, 1:8, 1);
-
-target_r_sum = sum(sum(im(1:8, 1:8, 1)))
-circle = circle .* target_r_sum/sum(sum(circle))
-
-sum(sum(circle))
-
-%%
-
-clc
-clear
-
-im = im2double(imread("peppers_color.tif"));
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
