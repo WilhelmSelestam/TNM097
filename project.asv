@@ -19,24 +19,24 @@ grays = [grays_val, grays_val, grays_val];
 my_256_palette = [ansi; cube; grays];
 my_256_palette = my_256_palette(1:256, :); % Final array
 
-%% Visualize the colors 
-% 1. Reshape the 256x3 palette into a 16x16 grid
-% Since each color is an RGB triplet, the final size is 16x16x3
-palette_grid = reshape(my_256_palette, [16, 16, 3]);
+% % Visualize the colors 
+% % 1. Reshape the 256x3 palette into a 16x16 grid
+% % Since each color is an RGB triplet, the final size is 16x16x3
+% palette_grid = reshape(my_256_palette, [16, 16, 3]);
+% 
+% % 2. Display the grid
+% figure;
+% imshow(palette_grid, 'InitialMagnification', 'fit');
+% axis on;
+% title('256 Color Dataset (16x16 Grid)');
+% 
+% % Optional: Label the axes to help identify specific color indices
+% xlabel('Column');
+% ylabel('Row');
 
-% 2. Display the grid
-figure;
-imshow(palette_grid, 'InitialMagnification', 'fit');
-axis on;
-title('256 Color Dataset (16x16 Grid)');
-
-% Optional: Label the axes to help identify specific color indices
-xlabel('Column');
-ylabel('Row');
-
-%% Load Image and get its main color clusters
+% Load Image and get its main color clusters
 clc
-img_org = im2double(imread("peppers_color.tif"));
+img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
 
@@ -354,7 +354,7 @@ for i = 1:num_fig_hight
     end
 end
 
-%% 6. Visualize Final Results
+% 6. Visualize Final Results
 figure('Name', 'Mosaic Results', 'Position', [100, 100, 1200, 500]);
 subplot(1,2,1);
 imshow(img_work);

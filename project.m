@@ -336,3 +336,33 @@ title('Original Image');
 subplot(1,2,2); 
 imshow(img_final);
 title(sprintf('Dynamic Shape Mosaic (%d Colors)', actual_num_colors));
+%%
+
+clc
+
+ref_img = im2double(img_work); 
+test_img = im2double(img_final);
+
+% --- MÅTT 1: PSNR ---
+psnr_val = psnr(test_img, ref_img);
+fprintf('PSNR: %.2f dB\n', psnr_val);
+
+% --- MÅTT 2: SSIM ---
+ssim_val = ssim(test_img, ref_img);
+fprintf('SSIM: %.4f\n', ssim_val);
+
+% --- MÅTT 3: S-CIELAB ---
+samplePerDeg = 82 * 1000 * tan(pi/180);
+scielab_val = scielab(samplePerDeg, rgb2xyz(ref_img), rgb2xyz(test_img), [65.05, 100, 108.9], 'xyz');
+fprintf('S-CIELAB (Mean Delta E): %.4f\n', mean(scielab_val(:)));
+
+
+
+
+
+
+
+
+
+
+
