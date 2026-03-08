@@ -20,17 +20,15 @@ my_256_palette = [ansi; cube; grays];
 my_256_palette = my_256_palette(1:256, :); % Final array
 
 %% Visualize the colors 
-% 1. Reshape the 256x3 palette into a 16x16 grid
-% Since each color is an RGB triplet, the final size is 16x16x3
+% Reshape the 256x3 palette into a 16x16 grid
 palette_grid = reshape(my_256_palette, [16, 16, 3]);
 
-% 2. Display the grid
+% Display the grid
 figure;
 imshow(palette_grid, 'InitialMagnification', 'fit');
 axis on;
 title('256 Color Dataset (16x16 Grid)');
 
-% Optional: Label the axes to help identify specific color indices
 xlabel('Column');
 ylabel('Row');
 
@@ -56,10 +54,10 @@ if rows < num_fig_hight*12 || cols < num_fig_width*12
                            'algorithm and lower the quality of your final mosaic.\n\n', ...
                            'Do you want to continue anyway?'], cols, rows, num_fig_hight*12, num_fig_width*12);
     
-    % Trigger the popup dialog
+    % Trigger popup
     user_choice = questdlg(warning_msg, 'Upscale Warning', 'Continue', 'Cancel', 'Continue');
     
-    % Abort the script if they don't explicitly choose to Continue
+    % Abort the script if they don't choose to Continue
     if strcmp(user_choice, 'Cancel') || isempty(user_choice)
         disp('Script aborted: Image too small.');
         return; % Stops the script entirely
@@ -93,11 +91,9 @@ repro_palette = my_256_palette(unique_idx, :); % select the brighter colors so w
 actual_num_colors = size(repro_palette, 1);
 
 % Define Shapes and their specific Palettes
-% Bar with colors at rows 4 to 12
 bar_12 = zeros(12, 12);
 bar_12(3:10, 1:11) = 1;
 
-% Square with a 1-pixel border of zeros
 %square_outlier = zeros(15, 15); 
 % square_outlier = [0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
 %                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
