@@ -44,8 +44,8 @@ img_org = im2double(imread("peppers_color.tif"));
 [rows, cols, channels] = size(img_org);
 
 % get number of figures in col/row
-num_fig_hight = floor(720/12);
-num_fig_width = floor((720 * cols/rows)/12);
+num_fig_hight = floor(1080/12);
+num_fig_width = floor((1080 * cols/rows)/12);
 
 % Check if the original image is smaller than the target output (warning message)
 if rows < num_fig_hight*12 || cols < num_fig_width*12
@@ -113,7 +113,7 @@ actual_num_colors = size(repro_palette, 1);
 % 4. Define Shapes and their specific Palettes
 % Bar with colors at rows 4 to 12
 bar_12 = zeros(12, 12);
-bar_12(4:11, 2:11) = 1;
+bar_12(3:10, 1:11) = 1;
 
 % Square with a 1-pixel border of zeros
 %square_outlier = zeros(15, 15); 
@@ -133,18 +133,18 @@ bar_12(4:11, 2:11) = 1;
 %                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
 %                   0 0 0 0 0 1 1 1 1 1 0 0 0 0 0];
 
-circle_outlier = [0 0 0 0 1 1 1 1 0 0 0 0;
+circle_outlier = [0 0 0 0 0 1 1 0 0 0 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
                   0 0 1 1 1 1 1 1 1 1 0 0;
                   0 1 1 1 1 1 1 1 1 1 1 0;
+                  0 1 1 1 1 1 1 1 1 1 1 0;
                   1 1 1 1 1 1 1 1 1 1 1 1;
                   1 1 1 1 1 1 1 1 1 1 1 1;
-                  1 1 1 1 1 1 1 1 1 1 1 1;
-                  0 1 1 1 1 1 1 1 1 1 1 1;
+                  0 1 1 1 1 1 1 1 1 1 1 0;
                   0 0 1 1 1 1 1 1 1 1 1 0;
                   0 0 1 1 1 1 1 1 1 1 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
-                  0 0 0 0 1 1 1 1 0 0 0 0];
+                  0 0 0 0 0 1 1 0 0 0 0 0];
 
 masks = cell(1, 5); 
 effective_repro_lab = cell(1, 5); % Cell array to hold the 5 specific palettes
@@ -203,7 +203,7 @@ for i = 1:num_fig_hight
         [Gmag, Gdir] = imgradient(gray_block); 
         
         avg_mag = mean(Gmag(:)); 
-        edge_threshold = 0.3; % Ni kan behöva sänka denna för im2double-bilder (ofta mellan 0.01-0.1)
+        edge_threshold = 0.2; % Ni kan behöva sänka denna för im2double-bilder (ofta mellan 0.01-0.1)
         
         if avg_mag < edge_threshold
             % LÅG FREKVENS: Använd cirkel
@@ -301,3 +301,33 @@ title('Original Image');
 subplot(1,2,2); 
 imshow(img_final);
 title(sprintf('Dynamic Shape Mosaic (%d Colors)', actual_num_colors));
+%%
+
+clc
+
+ref_img = im2double(img_work); 
+test_img = im2double(img_final);
+
+% --- MÅTT 1: PSNR ---
+psnr_val = psnr(test_img, ref_img);
+fprintf('PSNR: %.2f dB\n', psnr_val);
+
+% --- MÅTT 2: SSIM ---
+ssim_val = ssim(test_img, ref_img);
+fprintf('SSIM: %.4f\n', ssim_val);
+
+% --- MÅTT 3: S-CIELAB ---
+samplePerDeg = 82 * 1000 * tan(pi/180);
+scielab_val = scielab(samplePerDeg, rgb2xyz(ref_img), rgb2xyz(test_img), [65.05, 100, 108.9], 'xyz');
+fprintf('S-CIELAB (Mean Delta E): %.4f\n', mean(scielab_val(:)));
+
+
+
+
+
+
+
+
+
+
+
