@@ -36,9 +36,10 @@ ylabel('Row');
 
 %% Load Image and get its main color clusters
 clc
-img_org = im2double(imread("peppers_color.tif"));
+%img_org = im2double(imread("peppers_color.tif"));
 %img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
+img_org = im2double(imread("woman_portrait.jpg"));
 
 % Get dimenssions of input image
 [rows, cols, channels] = size(img_org);
@@ -74,23 +75,6 @@ img_lab = rgb2lab(img_work);
 % Flatten to Nx3 list of pixels
 pixel_data_lab = reshape(img_lab, [], 3);
 
-% 15x15
-% romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
-%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
-%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
-%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
-%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
-%            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
-
 % Subset Selection (K-means)
 num_colors = 64;
 
@@ -111,7 +95,7 @@ actual_num_colors = size(repro_palette, 1);
 % Define Shapes and their specific Palettes
 % Bar with colors at rows 4 to 12
 bar_12 = zeros(12, 12);
-bar_12(3:10, 2:11) = 1;
+bar_12(3:10, 1:11) = 1;
 
 % Square with a 1-pixel border of zeros
 %square_outlier = zeros(15, 15); 
@@ -131,6 +115,23 @@ bar_12(3:10, 2:11) = 1;
 %                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
 %                   0 0 0 0 0 1 1 1 1 1 0 0 0 0 0];
 
+% 15x15
+% romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
+%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
+%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
+%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
+%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
+%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
+%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
+%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
+%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
+%            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
+
 circle_outlier = [0 0 0 0 0 1 1 0 0 0 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
                   0 0 1 1 1 1 1 1 1 1 0 0;
@@ -143,32 +144,6 @@ circle_outlier = [0 0 0 0 0 1 1 0 0 0 0 0;
                   0 0 1 1 1 1 1 1 1 1 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
                   0 0 0 0 0 1 1 0 0 0 0 0];
-
-circle_0 = [0 0 0 0 0 0 0 0 0 0 0 0;
-            0 0 0 0 0 0 0 0 0 0 0 0;
-            0 0 0 0 1 1 1 1 0 0 0 0;
-            0 0 1 1 1 1 1 1 1 1 0 0;
-            0 1 1 1 1 1 1 1 1 1 1 0;
-            1 1 1 1 1 1 1 1 1 1 1 1;
-            1 1 1 1 1 1 1 1 1 1 1 1;
-            0 1 1 1 1 1 1 1 1 1 1 0;
-            0 0 1 1 1 1 1 1 1 1 0 0;
-            0 0 0 0 1 1 1 1 0 0 0 0;
-            0 0 0 0 0 0 0 0 0 0 0 0;
-            0 0 0 0 0 0 0 0 0 0 0 0];
-
-circle_45 = [0 0 0 0 0 0 0 0 0 0 0 0;
-             0 0 0 0 0 0 0 1 1 1 1 0;
-             0 0 0 0 0 1 1 1 1 1 1 0;
-             0 0 0 1 1 1 1 1 1 1 1 0;
-             0 0 1 1 1 1 1 1 1 1 1 0;
-             0 0 1 1 1 1 1 1 1 1 0 0;
-             0 0 1 1 1 1 1 1 1 1 0 0;
-             0 1 1 1 1 1 1 1 1 1 0 0;
-             0 1 1 1 1 1 1 1 1 1 0 0;
-             0 1 1 1 1 1 1 1 1 1 0 0;
-             0 1 1 1 1 0 0 0 0 0 0 0;
-             0 0 0 0 0 0 0 0 0 0 0 0];
 
 romb = [0 0 0 0 0 0 0 0 0 0 0 0;
         0 0 0 0 0 1 1 0 0 0 0 0;
@@ -189,7 +164,7 @@ angles = [0, 45, 90, 135];
 
 % Calculate masks and specific brightness ratios for all 5 shapes
 for k = 1:4
-    masks{k} = logical(imrotate(romb, angles(k), 'nearest', 'crop'));
+    masks{k} = logical(imrotate(bar_12, angles(k), 'nearest', 'crop'));
     current_ratio = sum(masks{k}(:)) / 144; 
     temp_rgb = repro_palette * current_ratio;
     temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
@@ -240,84 +215,48 @@ for i = 1:num_fig_hight
         avg_mag = mean(Gmag(:)); 
         edge_threshold = 0.2;
         
-        if avg_mag < edge_threshold
-            % LÅG FREKVENS: Använd cirkel
+        if avg_mag < edge_threshold % low magnitude: use circle
             chosen_k = 5; 
-        else
-            % HÖG FREKVENS: Hitta riktning
+
+        else % high magnitude: find right angle
             valid_dirs = Gdir(Gmag > max(Gmag(:))*0.5);
             
-            if isempty(valid_dirs)
-                % Failsafe om det mot förmodan saknas tydliga kanter
+            if isempty(valid_dirs) % Failsafe if no edges are found
                 chosen_k = 5; 
             else
-                %avg_dir = mean(valid_dirs);
-
-                % Konvertera till radianer för de trigonometriska funktionerna
                 rads = deg2rad(valid_dirs);
                 
-                % Beräkna genomsnittlig riktning via sin och cos
+                % calculate average direction based of sin and cos
                 avg_dir = rad2deg(atan2(mean(sin(rads)), mean(cos(rads))));
                                 
-                % Gradienten är vinkelrät mot kanten. Lägg till 90 för att följa kanten.
-                % mod(..., 180) konverterar intervallet [-180, 180] till [0, 180)
-                edge_dir = mod(avg_dir + 90, 180); 
+                % Gradient is perpendicular compaired to the edge. Add 90 degrees to follow the edge.
+                % mod(..., 180) converts the interval [-180, 180] to [0, 180)
+                edge_dir = mod(avg_dir + 90, 180);
                 
                 angles_to_check = [0, 45, 90, 135, 180];
                 [~, min_idx] = min(abs(angles_to_check - edge_dir));
                 if min_idx == 5
-                    min_idx = 1; % 180 grader är samma sak som 0 grader
+                    min_idx = 1; % 180 same as 0 degrees
                 end
                 chosen_k = min_idx;
             end
         end
         
-        % 2. Färgmatchning (Nu kör vi bara för den VALDA masken)
+        % Color match the selected figure
         current_mask = masks{chosen_k};
         avg_r = mean(block_r(current_mask));
         avg_g = mean(block_g(current_mask));
         avg_b = mean(block_b(current_mask));
         
-        % Omvandla till Lab för färgmatchning [cite: 30]
+        % change to lab
         avg_lab = squeeze(rgb2lab(reshape([avg_r, avg_g, avg_b], 1, 1, 3)))';
         
-        % Hitta närmaste färg i paletten för just denna mask
+        % find closest color in our color palette
         distances = sqrt(sum((effective_repro_lab{chosen_k} - avg_lab).^2, 2));
         [~, closest_idx] = min(distances);
         
         winning_mask = current_mask;
         winning_color = repro_palette(closest_idx, :);
-        
-%         % initialise variables for picking best match
-%         best_error = inf;
-%         winning_mask = masks{1};
-%         winning_color = repro_palette(1, :);
-%         
-%         % The 5-Shape Tournament
-%         for k = 1:5
-%             current_mask = masks{k};
-%             avg_r = mean(block_r(current_mask));
-%             avg_g = mean(block_g(current_mask));
-%             avg_b = mean(block_b(current_mask));
-%             
-%             current_block_rgb = zeros(1,1,3);
-%             current_block_rgb(1,1,1) = avg_r;
-%             current_block_rgb(1,1,2) = avg_g;
-%             current_block_rgb(1,1,3) = avg_b;
-%             current_block_lab = rgb2lab(current_block_rgb);
-%             avg_lab = squeeze(current_block_lab)';
-%             
-%             % Compare against this specific shape's effective palette
-%             distances = sqrt(sum((effective_repro_lab{k} - avg_lab).^2, 2));
-%         
-%             [min_dist, closest_idx] = min(distances);
-%             
-%             if min_dist < best_error
-%                 best_error = min_dist;               
-%                 winning_mask = current_mask;         
-%                 winning_color = repro_palette(closest_idx, :); 
-%             end
-%         end
         
         % Paint the winner
         for c = 1:3
@@ -336,8 +275,7 @@ title('Original Image');
 subplot(1,2,2); 
 imshow(img_final);
 title(sprintf('Dynamic Shape Mosaic (%d Colors)', actual_num_colors));
-%%
-
+%% Evaluation
 clc
 
 ref_img = im2double(img_work); 
