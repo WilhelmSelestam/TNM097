@@ -19,26 +19,26 @@ grays = [grays_val, grays_val, grays_val];
 my_256_palette = [ansi; cube; grays];
 my_256_palette = my_256_palette(1:256, :); % Final array
 
-%% Visualize the colors 
-% 1. Reshape the 256x3 palette into a 16x16 grid
-% Since each color is an RGB triplet, the final size is 16x16x3
-palette_grid = reshape(my_256_palette, [16, 16, 3]);
+% % Visualize the colors 
+% % 1. Reshape the 256x3 palette into a 16x16 grid
+% % Since each color is an RGB triplet, the final size is 16x16x3
+% palette_grid = reshape(my_256_palette, [16, 16, 3]);
+% 
+% % 2. Display the grid
+% figure;
+% imshow(palette_grid, 'InitialMagnification', 'fit');
+% axis on;
+% title('256 Color Dataset (16x16 Grid)');
+% 
+% % Optional: Label the axes to help identify specific color indices
+% xlabel('Column');
+% ylabel('Row');
 
-% 2. Display the grid
-figure;
-imshow(palette_grid, 'InitialMagnification', 'fit');
-axis on;
-title('256 Color Dataset (16x16 Grid)');
-
-% Optional: Label the axes to help identify specific color indices
-xlabel('Column');
-ylabel('Row');
-
-%% Load Image and get its main color clusters
+% Load Image and get its main color clusters
 clc
 img_org = im2double(imread("peppers_color.tif"));
 %img_org = im2double(imread("lake.jpg"));
-%img_org = im2double(imread("sea_sky.jpg"));
+% img_org = im2double(imread("sea_sky.jpg"));
 
 % Get dimenssions of input image
 [rows, cols, channels] = size(img_org);
@@ -93,7 +93,7 @@ romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
 
-%% Subset Selection (K-means)
+% Subset Selection (K-means)
 num_colors = 64; 
 
 % Create a darker palette to find our correct colors
@@ -165,22 +165,24 @@ temp_rgb = repro_palette * current_ratio;
 temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
 effective_repro_lab{5} = reshape(rgb2lab(temp_3d), [actual_num_colors, 3]);
 
-% Visualize
-figure;
-subplot(1,2,1); 
-imshow(img_org); % Fixed variable name
-title('Original Image');
+% % Visualize
+% figure;
+% subplot(1,2,1); 
+% imshow(img_org); % Fixed variable name
+% title('Original Image');
+% 
+% subplot(1,2,2); 
+% % Create a swatch using the actual number of extracted colors
+% % repelem creates nice clean blocks without interpolation blur
+% swatch_blocks = repelem(repro_palette, 20, 20); 
+% swatch_img = reshape(swatch_blocks, actual_num_colors * 20, 20, 3);
+% 
+% imshow(swatch_img); 
+% title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
 
-subplot(1,2,2); 
-% Create a swatch using the actual number of extracted colors
-% repelem creates nice clean blocks without interpolation blur
-swatch_blocks = repelem(repro_palette, 20, 20); 
-swatch_img = reshape(swatch_blocks, actual_num_colors * 20, 20, 3);
+%%
 
-imshow(swatch_img); 
-title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
-
-%% create new image
+% create new image
 clc
 img_final = zeros(num_fig_hight * 12, num_fig_width * 12, 3);
 
@@ -196,37 +198,91 @@ for i = 1:num_fig_hight
         block_r = current_block(:,:,1);
         block_g = current_block(:,:,2);
         block_b = current_block(:,:,3);
+
+        gray_block = rgb2gray(current_block); 
+        [Gmag, Gdir] = imgradient(gray_block); 
         
-        % initialise variables for picking best match
-        best_error = inf;
-        winning_mask = masks{1};
-        winning_color = repro_palette(1, :);
+        avg_mag = mean(Gmag(:)); 
+        edge_threshold = 0.3; % Ni kan behöva sänka denna för im2double-bilder (ofta mellan 0.01-0.1)
         
-        % The 5-Shape Tournament
-        for k = 1:5
-            current_mask = masks{k};
-            avg_r = mean(block_r(current_mask));
-            avg_g = mean(block_g(current_mask));
-            avg_b = mean(block_b(current_mask));
+        if avg_mag < edge_threshold
+            % LÅG FREKVENS: Använd cirkel
+            chosen_k = 5; 
+        else
+            % HÖG FREKVENS: Hitta riktning
+            valid_dirs = Gdir(Gmag > max(Gmag(:))*0.5);
             
-            current_block_rgb = zeros(1,1,3);
-            current_block_rgb(1,1,1) = avg_r;
-            current_block_rgb(1,1,2) = avg_g;
-            current_block_rgb(1,1,3) = avg_b;
-            current_block_lab = rgb2lab(current_block_rgb);
-            avg_lab = squeeze(current_block_lab)';
-            
-            % Compare against this specific shape's effective palette
-            distances = sqrt(sum((effective_repro_lab{k} - avg_lab).^2, 2));
-        
-            [min_dist, closest_idx] = min(distances);
-            
-            if min_dist < best_error
-                best_error = min_dist;               
-                winning_mask = current_mask;         
-                winning_color = repro_palette(closest_idx, :); 
+            if isempty(valid_dirs)
+                % Failsafe om det mot förmodan saknas tydliga kanter
+                chosen_k = 5; 
+            else
+%                 avg_dir = mean(valid_dirs);
+
+                % Konvertera till radianer för de trigonometriska funktionerna
+                rads = deg2rad(valid_dirs);
+                
+                % Beräkna genomsnittlig riktning via sin och cos
+                avg_dir = rad2deg(atan2(mean(sin(rads)), mean(cos(rads))));
+                                
+                % Gradienten är vinkelrät mot kanten. Lägg till 90 för att följa kanten.
+                % mod(..., 180) konverterar intervallet [-180, 180] till [0, 180)
+                edge_dir = mod(avg_dir + 90, 180); 
+                
+                angles_to_check = [0, 45, 90, 135, 180];
+                [~, min_idx] = min(abs(angles_to_check - edge_dir));
+                if min_idx == 5
+                    min_idx = 1; % 180 grader är samma sak som 0 grader
+                end
+                chosen_k = min_idx;
             end
         end
+        
+        % 2. Färgmatchning (Nu kör vi bara för den VALDA masken)
+        current_mask = masks{chosen_k};
+        avg_r = mean(block_r(current_mask));
+        avg_g = mean(block_g(current_mask));
+        avg_b = mean(block_b(current_mask));
+        
+        % Omvandla till Lab för färgmatchning [cite: 30]
+        avg_lab = squeeze(rgb2lab(reshape([avg_r, avg_g, avg_b], 1, 1, 3)))';
+        
+        % Hitta närmaste färg i paletten för just denna mask
+        distances = sqrt(sum((effective_repro_lab{chosen_k} - avg_lab).^2, 2));
+        [~, closest_idx] = min(distances);
+        
+        winning_mask = current_mask;
+        winning_color = repro_palette(closest_idx, :);
+        
+%         % initialise variables for picking best match
+%         best_error = inf;
+%         winning_mask = masks{1};
+%         winning_color = repro_palette(1, :);
+%         
+%         % The 5-Shape Tournament
+%         for k = 1:5
+%             current_mask = masks{k};
+%             avg_r = mean(block_r(current_mask));
+%             avg_g = mean(block_g(current_mask));
+%             avg_b = mean(block_b(current_mask));
+%             
+%             current_block_rgb = zeros(1,1,3);
+%             current_block_rgb(1,1,1) = avg_r;
+%             current_block_rgb(1,1,2) = avg_g;
+%             current_block_rgb(1,1,3) = avg_b;
+%             current_block_lab = rgb2lab(current_block_rgb);
+%             avg_lab = squeeze(current_block_lab)';
+%             
+%             % Compare against this specific shape's effective palette
+%             distances = sqrt(sum((effective_repro_lab{k} - avg_lab).^2, 2));
+%         
+%             [min_dist, closest_idx] = min(distances);
+%             
+%             if min_dist < best_error
+%                 best_error = min_dist;               
+%                 winning_mask = current_mask;         
+%                 winning_color = repro_palette(closest_idx, :); 
+%             end
+%         end
         
         % Paint the winner
         for c = 1:3
@@ -237,7 +293,7 @@ for i = 1:num_fig_hight
     end
 end
 
-%% 6. Visualize Final Results
+% 6. Visualize Final Results
 figure('Name', 'Mosaic Results', 'Position', [100, 100, 1200, 500]);
 subplot(1,2,1);
 imshow(img_work);
