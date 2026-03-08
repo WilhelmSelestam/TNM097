@@ -2,16 +2,16 @@
 clc
 clear
 % Generate color palette
-% 1. 16 Standard ANSI colors
+% 16 Standard ANSI colors
 ansi = [0,0,0; 128,0,0; 0,128,0; 128,128,0; 0,0,128; 128,0,128; 0,128,128; 192,192,192;
         128,128,128; 255,0,0; 0,255,0; 255,255,0; 0,0,255; 255,0,255; 0,255,255; 255,255,255] / 255;
 
-% 2. 216 colors (the 6x6x6 color cube)
+% 216 colors (the 6x6x6 color cube)
 vals = [0, 95, 135, 175, 215, 255] / 255;
 [R, G, B] = ndgrid(vals, vals, vals);
 cube = [R(:), G(:), B(:)];
 
-% 3. 24 Grayscale levels (gradient from dark to light)
+% 24 Grayscale levels (gradient from dark to light)
 grays_val = linspace(8, 238, 24)' / 255;
 grays = [grays_val, grays_val, grays_val];
 
@@ -36,8 +36,8 @@ ylabel('Row');
 
 %% Load Image and get its main color clusters
 clc
-%img_org = im2double(imread("peppers_color.tif"));
-img_org = im2double(imread("lake.jpg"));
+img_org = im2double(imread("peppers_color.tif"));
+%img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
 
 % Get dimenssions of input image
@@ -47,6 +47,25 @@ img_org = im2double(imread("lake.jpg"));
 num_fig_hight = floor(720/12);
 num_fig_width = floor((720 * cols/rows)/12);
 
+% Check if the original image is smaller than the target output (warning message)
+if rows < num_fig_hight*12 || cols < num_fig_width*12
+    warning_msg = sprintf(['Warning: Your input image (%dx%d) is smaller than the target mosaic size (%dx%d).\n\n', ...
+                           'Because the script uses "nearest" interpolation, stretching a small image will create ', ...
+                           'heavy blockiness and artificial jagged edges. This can confuse the shape-rotation ', ...
+                           'algorithm and lower the quality of your final mosaic.\n\n', ...
+                           'Do you want to continue anyway?'], cols, rows, num_fig_hight*12, num_fig_width*12);
+    
+    % Trigger the popup dialog
+    user_choice = questdlg(warning_msg, 'Upscale Warning', 'Continue', 'Cancel', 'Continue');
+    
+    % Abort the script if they don't explicitly choose to Continue
+    if strcmp(user_choice, 'Cancel') || isempty(user_choice)
+        disp('Script aborted: Image too small.');
+        return; % Stops the script entirely
+    end
+end
+
+% resize orgininal image
 img_work = imresize(img_org, [num_fig_hight*12,num_fig_width*12], "nearest");
 
 % Convert original image to CIELAB
@@ -74,11 +93,11 @@ romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
 
-%% 3. Subset Selection (K-means)
+%% Subset Selection (K-means)
 num_colors = 64; 
 
-% Create a SINGLE standard matrix to find our bright colors
-representative_ratio = 0.6; % Rough average ratio of our shapes
+% Create a darker palette to find our correct colors
+representative_ratio = 0.72; % Rough average ratio of our shapes
 darken_palette_rgb = my_256_palette * representative_ratio;
 darken_palette_3d = reshape(darken_palette_rgb, [256, 1, 3]);
 darken_palette_lab = reshape(rgb2lab(darken_palette_3d), [256, 3]);
@@ -88,13 +107,13 @@ darken_palette_lab = reshape(rgb2lab(darken_palette_3d), [256, 3]);
 idx = knnsearch(darken_palette_lab, image_centroids_lab);
 
 unique_idx = unique(idx);
-repro_palette = my_256_palette(unique_idx, :);
+repro_palette = my_256_palette(unique_idx, :); % select the brighter colors so when darken matches original
 actual_num_colors = size(repro_palette, 1);
 
 % 4. Define Shapes and their specific Palettes
 % Bar with colors at rows 4 to 12
-bar_15 = zeros(12, 12);
-bar_15(4:11, 2:11) = 1;
+bar_12 = zeros(12, 12);
+bar_12(4:11, 2:11) = 1;
 
 % Square with a 1-pixel border of zeros
 %square_outlier = zeros(15, 15); 
@@ -114,7 +133,7 @@ bar_15(4:11, 2:11) = 1;
 %                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
 %                   0 0 0 0 0 1 1 1 1 1 0 0 0 0 0];
 
-square_outlier = [0 0 0 0 1 1 1 1 0 0 0 0;
+circle_outlier = [0 0 0 0 1 1 1 1 0 0 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
                   0 0 1 1 1 1 1 1 1 1 0 0;
                   0 1 1 1 1 1 1 1 1 1 1 0;
@@ -133,14 +152,14 @@ angles = [0, 45, 90, 135];
 
 % Calculate masks and specific brightness ratios for all 5 shapes
 for k = 1:4
-    masks{k} = logical(imrotate(bar_15, angles(k), 'nearest', 'crop'));
+    masks{k} = logical(imrotate(bar_12, angles(k), 'nearest', 'crop'));
     current_ratio = sum(masks{k}(:)) / 144; 
     temp_rgb = repro_palette * current_ratio;
     temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
     effective_repro_lab{k} = reshape(rgb2lab(temp_3d), [actual_num_colors, 3]);
 end
 
-masks{5} = logical(square_outlier);
+masks{5} = logical(circle_outlier);
 current_ratio = sum(masks{5}(:)) / 144; 
 temp_rgb = repro_palette * current_ratio;
 temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
@@ -178,6 +197,7 @@ for i = 1:num_fig_hight
         block_g = current_block(:,:,2);
         block_b = current_block(:,:,3);
         
+        % initialise variables for picking best match
         best_error = inf;
         winning_mask = masks{1};
         winning_color = repro_palette(1, :);
@@ -219,8 +239,8 @@ end
 
 %% 6. Visualize Final Results
 figure('Name', 'Mosaic Results', 'Position', [100, 100, 1200, 500]);
-subplot(1,2,1); 
-imshow(img_org); 
+subplot(1,2,1);
+imshow(img_work);
 title('Original Image');
 subplot(1,2,2); 
 imshow(img_final);
