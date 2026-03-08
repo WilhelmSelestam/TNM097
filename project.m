@@ -36,17 +36,18 @@ ylabel('Row');
 
 %% Load Image and get its main color clusters
 clc
-img_org = im2double(imread("peppers_color.tif"));
+%img_org = im2double(imread("peppers_color.tif"));
+img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
 
 % Get dimenssions of input image
 [rows, cols, channels] = size(img_org);
 
 % get number of figures in col/row
-num_fig_hight = 720/15;
-num_fig_width = floor((720 * cols/rows)/15);
+num_fig_hight = floor(720/12);
+num_fig_width = floor((720 * cols/rows)/12);
 
-img_work = imresize(img_org, [num_fig_hight*15,num_fig_width*15], "nearest");
+img_work = imresize(img_org, [num_fig_hight*12,num_fig_width*12], "nearest");
 
 % Convert original image to CIELAB
 img_lab = rgb2lab(img_work);
@@ -73,40 +74,77 @@ romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
 
-bar_15 = zeros(15, 15);
-bar_15(4:12, :) = 1;
+%% 3. Subset Selection (K-means)
+num_colors = 64; 
 
-% Draw the Mosaic
-% Convert mask to logical for easy indexing
-mask = logical(bar_15);
-
-% Calculate the ratio of colored pixels vs total pixels in the shape
-mask_ratio = sum(mask(:)) / numel(mask); % For romb_12, this is 72/132 (~0.545)
-
-% Create a simulated palette that accounts for the black background
-darken_palette_rgb = my_256_palette * mask_ratio;
-
-% Convert this effective palette to LAB for accurate visual matching
+% Create a SINGLE standard matrix to find our bright colors
+representative_ratio = 0.6; % Rough average ratio of our shapes
+darken_palette_rgb = my_256_palette * representative_ratio;
 darken_palette_3d = reshape(darken_palette_rgb, [256, 1, 3]);
 darken_palette_lab = reshape(rgb2lab(darken_palette_3d), [256, 3]);
 
-% The amount of colors in the final palette
-num_colors = 64; 
-
-% Perform K-means clustering
-[~, image_centroids_lab] = kmeans(pixel_data_lab, num_colors, 'MaxIter', 100, 'EmptyAction', 'drop');
-
-% Map centroids to dataset
+% K-Means Clustering
+[~, image_centroids_lab] = kmeans(pixel_data_lab, num_colors, 'MaxIter', 200, 'EmptyAction', 'drop');
 idx = knnsearch(darken_palette_lab, image_centroids_lab);
 
-% Remove duplicates 
 unique_idx = unique(idx);
-
-% Pull the final colors from the ORIGINAL RGB palette for viewing
 repro_palette = my_256_palette(unique_idx, :);
-
-% Check how many unique colors we actually ended up with
 actual_num_colors = size(repro_palette, 1);
+
+% 4. Define Shapes and their specific Palettes
+% Bar with colors at rows 4 to 12
+bar_15 = zeros(12, 12);
+bar_15(4:11, 2:11) = 1;
+
+% Square with a 1-pixel border of zeros
+%square_outlier = zeros(15, 15); 
+% square_outlier = [0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
+%                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
+%                   0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
+%                   0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%                   0 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+%                   0 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+%                   0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
+%                   0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
+%                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
+%                   0 0 0 0 0 1 1 1 1 1 0 0 0 0 0];
+
+square_outlier = [0 0 0 0 1 1 1 1 0 0 0 0;
+                  0 0 0 1 1 1 1 1 1 0 0 0;
+                  0 0 1 1 1 1 1 1 1 1 0 0;
+                  0 1 1 1 1 1 1 1 1 1 1 0;
+                  1 1 1 1 1 1 1 1 1 1 1 1;
+                  1 1 1 1 1 1 1 1 1 1 1 1;
+                  1 1 1 1 1 1 1 1 1 1 1 1;
+                  0 1 1 1 1 1 1 1 1 1 1 1;
+                  0 0 1 1 1 1 1 1 1 1 1 0;
+                  0 0 1 1 1 1 1 1 1 1 0 0;
+                  0 0 0 1 1 1 1 1 1 0 0 0;
+                  0 0 0 0 1 1 1 1 0 0 0 0];
+
+masks = cell(1, 5); 
+effective_repro_lab = cell(1, 5); % Cell array to hold the 5 specific palettes
+angles = [0, 45, 90, 135];
+
+% Calculate masks and specific brightness ratios for all 5 shapes
+for k = 1:4
+    masks{k} = logical(imrotate(bar_15, angles(k), 'nearest', 'crop'));
+    current_ratio = sum(masks{k}(:)) / 144; 
+    temp_rgb = repro_palette * current_ratio;
+    temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
+    effective_repro_lab{k} = reshape(rgb2lab(temp_3d), [actual_num_colors, 3]);
+end
+
+masks{5} = logical(square_outlier);
+current_ratio = sum(masks{5}(:)) / 144; 
+temp_rgb = repro_palette * current_ratio;
+temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
+effective_repro_lab{5} = reshape(rgb2lab(temp_3d), [actual_num_colors, 3]);
 
 % Visualize
 figure;
@@ -125,68 +163,65 @@ title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
 
 %% create new image
 clc
-img_final = zeros(num_fig_hight * 15, num_fig_width * 15, 3);
+img_final = zeros(num_fig_hight * 12, num_fig_width * 12, 3);
 
-% We have our actual bright colors (repro_palette). 
-% Now we simulate how those specific 36 colors look on a black background.
-effective_repro_rgb = repro_palette * mask_ratio;
-
-% Convert this subset to LAB for accurate distance matching inside the loop
-effective_repro_3d = reshape(effective_repro_rgb, [actual_num_colors, 1, 3]);
-effective_repro_lab = reshape(rgb2lab(effective_repro_3d), [actual_num_colors, 3]);
-
-% create new images 
 for i = 1:num_fig_hight
     for j = 1:num_fig_width
-        % start and end of block
-        row_start = 1 + (i-1)*15;
-        row_end   = row_start + 14;
-        col_start = 1 + (j-1)*15;
-        col_end   = col_start + 14;
         
-        % Extract the actual 9x7 RGB block from the resized image
+        row_start = 1 + (i-1)*12;
+        row_end   = row_start + 11;
+        col_start = 1 + (j-1)*12;
+        col_end   = col_start + 11;
+        
         current_block = img_work(row_start:row_end, col_start:col_end, :);
-
-        % Calculate average color using ONLY the pixels inside the rhombus
-        % By using the logical mask, we ignore the background corners
         block_r = current_block(:,:,1);
         block_g = current_block(:,:,2);
         block_b = current_block(:,:,3);
         
-        avg_r = mean(block_r(:));
-        avg_g = mean(block_g(:));
-        avg_b = mean(block_b(:));
-
-        current_block_rgb = zeros(1,1,3);
-        current_block_rgb(1,1,1) = avg_r;
-        current_block_rgb(1,1,2) = avg_g;
-        current_block_rgb(1,1,3) = avg_b;
-
-        current_block_lab = rgb2lab(current_block_rgb);
-        avg_lab = squeeze(current_block_lab)';
-
-        % Find the closest color in our optimized LAB subset
-        distances = sqrt(sum((effective_repro_lab - avg_lab).^2, 2));
+        best_error = inf;
+        winning_mask = masks{1};
+        winning_color = repro_palette(1, :);
         
-        [~, closest_idx] = min(distances);
-        best_rgb = repro_palette(closest_idx, :);
-
-        % Paint the image with rombs
+        % The 5-Shape Tournament
+        for k = 1:5
+            current_mask = masks{k};
+            avg_r = mean(block_r(current_mask));
+            avg_g = mean(block_g(current_mask));
+            avg_b = mean(block_b(current_mask));
+            
+            current_block_rgb = zeros(1,1,3);
+            current_block_rgb(1,1,1) = avg_r;
+            current_block_rgb(1,1,2) = avg_g;
+            current_block_rgb(1,1,3) = avg_b;
+            current_block_lab = rgb2lab(current_block_rgb);
+            avg_lab = squeeze(current_block_lab)';
+            
+            % Compare against this specific shape's effective palette
+            distances = sqrt(sum((effective_repro_lab{k} - avg_lab).^2, 2));
+        
+            [min_dist, closest_idx] = min(distances);
+            
+            if min_dist < best_error
+                best_error = min_dist;               
+                winning_mask = current_mask;         
+                winning_color = repro_palette(closest_idx, :); 
+            end
+        end
+        
+        % Paint the winner
         for c = 1:3
-        canvas = img_final(row_start:row_end, col_start:col_end, c);
-        canvas(mask) = best_rgb(c);
-        img_final(row_start:row_end, col_start:col_end, c) = canvas;
+            canvas = img_final(row_start:row_end, col_start:col_end, c);
+            canvas(winning_mask) = winning_color(c);
+            img_final(row_start:row_end, col_start:col_end, c) = canvas;
         end
     end
 end
 
-%% Visualize Final Results
+%% 6. Visualize Final Results
 figure('Name', 'Mosaic Results', 'Position', [100, 100, 1200, 500]);
-
 subplot(1,2,1); 
 imshow(img_org); 
 title('Original Image');
-
 subplot(1,2,2); 
 imshow(img_final);
-title(sprintf('Rhombus Mosaic (%d Colors)', actual_num_colors));
+title(sprintf('Dynamic Shape Mosaic (%d Colors)', actual_num_colors));
