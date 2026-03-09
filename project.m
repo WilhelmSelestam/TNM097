@@ -32,6 +32,72 @@ title('256 Color Dataset (16x16 Grid)');
 xlabel('Column');
 ylabel('Row');
 
+%% color test
+
+num_colors = 50;
+
+% Convert the 256 palette to LAB for accurate human-vision math
+my_palette_3d = reshape(my_256_palette, [256, 1, 3]);
+my_palette_lab = reshape(rgb2lab(my_palette_3d), [256, 3]);
+
+% CORRECTED: Grab the 5th output (midx) which contains the actual row numbers!
+[~, ~, ~, ~, medoid_indices] = kmedoids(my_palette_lab, num_colors, 'Distance', 'euclidean');
+
+% Pull your final 50 most representative colors
+diverse_50_palette = my_256_palette(medoid_indices, :);
+
+% next 
+
+num_to_pick = 50;
+
+% Convert the 256 palette to LAB
+my_palette_3d = reshape(my_256_palette, [256, 1, 3]);
+my_palette_lab = reshape(rgb2lab(my_palette_3d), [256, 3]);
+
+selected_idx = zeros(num_to_pick, 1);
+selected_idx(1) = 1; % Start with the very first color
+
+% Track the minimum distance to the colors we've already picked
+min_distances = inf(256, 1);
+
+for i = 2:num_to_pick
+    % Look at the color we just picked
+    last_picked_lab = my_palette_lab(selected_idx(i-1), :);
+    
+    % Measure the distance from that color to ALL 256 colors
+    dist_to_last = sqrt(sum((my_palette_lab - last_picked_lab).^2, 2));
+    
+    % Update our record of how close each color is to our selected group
+    min_distances = min(min_distances, dist_to_last);
+    
+    % Pick the color that has the MAXIMUM minimum distance!
+    [~, next_idx] = max(min_distances);
+    selected_idx(i) = next_idx;
+end
+
+% Pull your final 50 highly-separated colors
+max_spread_50_palette = my_256_palette(selected_idx, :);
+
+%% visualize
+
+palette_grid = reshape(diverse_50_palette, [5, 10, 3]);
+palette_grid2 = reshape(max_spread_50_palette, [5, 10, 3]);
+
+% Display the grid
+figure;
+subplot(1,2,1);
+imshow(palette_grid, 'InitialMagnification', 'fit');
+axis on;
+title('50 Color Dataset (5x10 Grid)');
+xlabel('Column');
+ylabel('Row');
+subplot(1,2,2);
+imshow(palette_grid2, 'InitialMagnification', 'fit');
+axis on;
+title('50 Color Dataset (5x10 Grid)');
+xlabel('Column');
+ylabel('Row');
+
 %% Load Image and get its main color clusters
 clc
 %img_org = im2double(imread("peppers_color.tif"));
@@ -83,50 +149,20 @@ darken_palette_3d = reshape(darken_palette_rgb, [256, 1, 3]);
 darken_palette_lab = reshape(rgb2lab(darken_palette_3d), [256, 3]);
 
 % K-Means Clustering
-[~, image_centroids_lab] = kmeans(pixel_data_lab, num_colors, 'MaxIter', 200, 'EmptyAction', 'drop');
+[~, image_centroids_lab] = kmeans(pixel_data_lab, num_colors, 'MaxIter', 300, 'EmptyAction', 'drop');
 idx = knnsearch(darken_palette_lab, image_centroids_lab);
 
 unique_idx = unique(idx);
 repro_palette = my_256_palette(unique_idx, :); % select the brighter colors so when darken matches original
 actual_num_colors = size(repro_palette, 1);
 
-% Define Shapes and their specific Palettes
+%% Define Shapes and their specific Palettes
+clc
 bar_12 = zeros(12, 12);
 bar_12(3:10, 1:11) = 1;
 
-%square_outlier = zeros(15, 15); 
-% square_outlier = [0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
-%                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%                   0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%                   0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%                   0 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
-%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
-%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
-%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
-%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
-%                   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
-%                   0 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
-%                   0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%                   0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%                   0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%                   0 0 0 0 0 1 1 1 1 1 0 0 0 0 0];
-
-% 15x15
-% romb_15 = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0;
-%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
-%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
-%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 1 1 1 1 1 1 1 1 1 1 1 0 0;
-%            0 0 0 1 1 1 1 1 1 1 1 1 0 0 0;
-%            0 0 0 0 1 1 1 1 1 1 1 0 0 0 0;
-%            0 0 0 0 0 1 1 1 1 1 0 0 0 0 0;
-%            0 0 0 0 0 0 1 1 1 0 0 0 0 0 0;
-%            0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
+%square_outlier = zeros(12, 12); 
+%square_outlier(2:11, 2:11) = 1;
 
 circle_outlier = [0 0 0 0 0 1 1 0 0 0 0 0;
                   0 0 0 1 1 1 1 1 1 0 0 0;
@@ -173,20 +209,20 @@ temp_rgb = repro_palette * current_ratio;
 temp_3d = reshape(temp_rgb, [actual_num_colors, 1, 3]);
 effective_repro_lab{5} = reshape(rgb2lab(temp_3d), [actual_num_colors, 3]);
 
-% % Visualize
-% figure;
-% subplot(1,2,1); 
-% imshow(img_org); % Fixed variable name
-% title('Original Image');
-% 
-% subplot(1,2,2); 
-% % Create a swatch using the actual number of extracted colors
-% % repelem creates nice clean blocks without interpolation blur
-% swatch_blocks = repelem(repro_palette, 20, 20); 
-% swatch_img = reshape(swatch_blocks, actual_num_colors * 20, 20, 3);
-% 
-% imshow(swatch_img); 
-% title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
+%% Visualize
+figure;
+subplot(1,2,1); 
+imshow(img_org); % Fixed variable name
+title('Original Image');
+
+subplot(1,2,2); 
+% Create a swatch using the actual number of extracted colors
+% repelem creates nice clean blocks without interpolation blur
+swatch_blocks = repelem(repro_palette, 20, 20); 
+swatch_img = reshape(swatch_blocks, actual_num_colors * 20, 20, 3);
+
+imshow(swatch_img); 
+title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
 
 %% create new image
 clc
@@ -262,7 +298,9 @@ for i = 1:num_fig_hight
         end
     end
 end
-
+%% save
+imwrite(img_final,"test.png")
+%imwrite(img_work,"-original.png")
 %% 6. Visualize Final Results
 figure('Name', 'Mosaic Results', 'Position', [100, 100, 1200, 500]);
 subplot(1,2,1);
@@ -286,7 +324,7 @@ ssim_val = ssim(test_img, ref_img);
 fprintf('SSIM: %.4f\n', ssim_val);
 
 % --- MÅTT 3: S-CIELAB ---
-samplePerDeg = 82 * 1000 * tan(pi/180);
+samplePerDeg = 81 * 118 * tan(pi/180);
 scielab_val = scielab(samplePerDeg, rgb2xyz(ref_img), rgb2xyz(test_img), [65.05, 100, 108.9], 'xyz');
 fprintf('S-CIELAB (Mean Delta E): %.4f\n', mean(scielab_val(:)));
 
