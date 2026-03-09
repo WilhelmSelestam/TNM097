@@ -100,10 +100,13 @@ ylabel('Row');
 
 %% Load Image and get its main color clusters
 clc
-img_org = im2double(imread("peppers_color.tif"));
-%img_org = im2double(imread("lake.jpg"));
+%img_org = im2double(imread("peppers_color.tif"));
+img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
 %img_org = im2double(imread("woman_portrait.jpg"));
+
+test = imresize(img_org,[256,340], "nearest");
+img_org = test;
 
 % Get dimenssions of input image
 [rows, cols, channels] = size(img_org);

@@ -101,24 +101,27 @@ ylabel('Row');
 %% Load Image and get its main color clusters
 clc
 %img_org = im2double(imread("peppers_color.tif"));
-%img_org = im2double(imread("lake.jpg"));
+img_org = im2double(imread("lake.jpg"));
 %img_org = im2double(imread("sea_sky.jpg"));
-img_org = im2double(imread("woman_portrait.jpg"));
+%img_org = im2double(imread("woman_portrait.jpg"));
+
+test = imresize(img_org,[256,340], "nearest");
+im
 
 % Get dimenssions of input image
 [rows, cols, channels] = size(img_org);
 
-% get number of figures in col/row
-num_fig_hight = 1080/12;
-num_fig_width = floor((1080 * cols/rows)/12);
+% set output image hight and width
+img_hight = 1080;
+img_width = floor((1080 * cols/rows));
 
 % Check if the original image is smaller than the target output (warning message)
-if rows < num_fig_hight*12 || cols < num_fig_width*12
+if rows < img_hight || cols < img_width
     warning_msg = sprintf(['Warning: Your input image (%dx%d) is smaller than the target mosaic size (%dx%d).\n\n', ...
                            'Because the script uses "nearest" interpolation, stretching a small image will create ', ...
                            'heavy blockiness and artificial jagged edges. This can confuse the shape-rotation ', ...
                            'algorithm and lower the quality of your final mosaic.\n\n', ...
-                           'Do you want to continue anyway?'], cols, rows, num_fig_hight*12, num_fig_width*12);
+                           'Do you want to continue anyway?'], cols, rows, img_hight, img_width);
     
     % Trigger popup
     user_choice = questdlg(warning_msg, 'Upscale Warning', 'Continue', 'Cancel', 'Continue');
@@ -131,7 +134,7 @@ if rows < num_fig_hight*12 || cols < num_fig_width*12
 end
 
 % resize orgininal image
-img_work = imresize(img_org, [num_fig_hight*12,num_fig_width*12], "nearest");
+img_work = imresize(img_org, [img_hight,img_width], "nearest");
 
 % Convert original image to CIELAB
 img_lab = rgb2lab(img_work);
@@ -226,10 +229,10 @@ title(sprintf('Optimized Subset (%d Colors)', actual_num_colors));
 
 %% create new image
 clc
-img_final = zeros(num_fig_hight * 12, num_fig_width * 12, 3);
+img_final = zeros(img_hight, img_width, 3);
 
-for i = 1:num_fig_hight
-    for j = 1:num_fig_width
+for i = 1:(img_hight/12)
+    for j = 1:(img_width/12)
         
         row_start = 1 + (i-1)*12;
         row_end   = row_start + 11;
