@@ -88,7 +88,7 @@ figure;
 subplot(1,2,1);
 imshow(palette_grid, 'InitialMagnification', 'fit');
 axis on;
-title('50 Color Dataset (5x10 Grid)');
+title('diverce 50 Color Dataset (5x10 Grid)');
 xlabel('Column');
 ylabel('Row');
 subplot(1,2,2);
@@ -109,7 +109,7 @@ img_org = im2double(imread("woman_portrait.jpg"));
 [rows, cols, channels] = size(img_org);
 
 % get number of figures in col/row
-num_fig_hight = floor(1080/12);
+num_fig_hight = 1080/12;
 num_fig_width = floor((1080 * cols/rows)/12);
 
 % Check if the original image is smaller than the target output (warning message)
